@@ -29,6 +29,7 @@ library(reshape)
 Myfile1= "/Users/yaminipriyankakandikattu/Downloads/AH_Monthly_Provisional_Counts_of_Deaths_for_Select_Causes_of_Death_by_Sex__Age__and_Race_and_Hispanic_Origin.csv"
 df <- read.csv(Myfile1)
 colnames(df)
+df
 melt_data <- melt(df, id = c("AnalysisDate","Date.Of.Death.Year","Date.Of.Death.Month","Start.Date",
 "End.Date","Jurisdiction.of.Occurrence","Sex","Race.Ethnicity","AgeGroup"))
 #keeps <- c("MMWRweek","RaceEthnicity","Sex","AgeGroup","Deaths..weighted.")
@@ -44,9 +45,10 @@ data
 colnames(data)
 is.na(data)
 data = na.omit(data)
+data
 #tranx <- read.transactions(file=df,header = TRUE,format="single", sep=",", cols=c("MMWRweek","RaceEthnicity"),rm.duplicates = T)
-support_seq <- seq(0.1, 0.8, by = 0.05)
-confidence_seq <- seq(0.2, 0.9, by = 0.1)
+support_seq <- seq(0.1, 1, by = 0.05)
+confidence_seq <- seq(0.2, 1.2, by = 0.1)
 results <- data.frame(support = numeric(), confidence = numeric(), lift = numeric())
 for (i in 1:length(support_seq)) 
 {
