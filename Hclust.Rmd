@@ -1,0 +1,46 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+library(stats)
+df <- read.csv("/Users/yaminipriyankakandikattu/Downloads/Weekly_Provisional_Counts_of_Deaths_by_State_and_Select_Causes__2020-2023.csv")
+
+str(df)
+colnames(df)
+# Drop Columns
+data <- subset (df, select = -c(Data.As.Of,Jurisdiction.of.Occurrence,MMWR.Week,Week.Ending.Date,All.Cause,COVID.19..U071..Multiple.Cause.of.Death.,COVID.19..U071..Underlying.Cause.of.Death.,flag_allcause, flag_natcause,flag_sept,flag_neopl,flag_diab,flag_alz, flag_inflpn,flag_clrd,flag_otherresp,flag_nephr,flag_otherunk,flag_hd,flag_stroke,flag_cov19mcod,flag_cov19ucod))
+data
+colnames(data)
+data[rowSums(data[])>0,]
+sum(is.na(data))
+data <- replace(data, is.na(data), 0)
+data = head(data, 100)
+# Compute cosine similarity matrix
+install.packages("lsa")
+library(lsa)
+mm = t(as.matrix(data,rownames = TRUE))
+mm
+similarity_matrix <- crossprod(mm) / (sqrt(colSums(mm^2)) %*% t(sqrt(colSums(mm^2))))
+#similarity_matrix <- crossprod(data) / (sqrt(colSums(mydata^2)) %*% t(sqrt(colSums(mydata^2))))
+is.na(similarity_matrix)
+# Perform hierarchical clustering using complete linkage and cosine similarity as distance measure
+hc <- hclust(as.dist(1 - similarity_matrix), method = "complete")
+# Plot the dendrogram
+#plot(hc, hang = -1, cex = 0.6)
+#hcd <- as.dendrogram(hc)
+# Define nodePar
+#cut_avg <- cutree(hc, k = 3)
+plot(hc, cex = 0.8,hang=-1,main = "Cluster Dendrogram")
+#suppressPackageStartupMessages(library(dendextend))
+#avg_dend_obj <- as.dendrogram(hc)
+#avg_col_dend <- color_branches(avg_dend_obj, h = 3)
+#plot(avg_col_dend)
+# Performing k-means clustering for different values of k and calculates the within-cluster sum of squares (WSS) for each k.
+wss <- c()
+for (i in 1:10) {
+  km <- kmeans(mm, centers = i, nstart = 10)
+  wss[i] <- sum(km$withinss)
+}
+#creating a line and points graph with WSS values
+plot(1:10,wss, type = "b", xlab = "Number of Clusters", ylab = "")
