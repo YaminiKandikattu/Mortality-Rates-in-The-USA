@@ -1,0 +1,120 @@
+---
+title: "NB"
+output: html_document
+date: "2023-03-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+library(tm)
+#install.packages("tm")
+library(stringr)
+library(wordcloud)
+#install.packages("Snowball")
+## NOTE Snowball is not yet available for R v 3.5.x
+## So I cannot use it  - yet...
+##ibrary("Snowball")
+##set working directory
+## ONCE: install.packages("slam")
+library(slam)
+library(quanteda)
+## ONCE: install.packages("quanteda")
+## Note - this includes SnowballC
+library(SnowballC)
+library(arules)
+##ONCE: install.packages('proxy')
+library(proxy)
+library(cluster)
+library(stringi)
+library(proxy)
+library(Matrix)
+#install.packages("tidytext")
+library(tidytext) # convert DTM to DF
+library(plyr) ## for adply
+library(ggplot2)
+library(factoextra) # for fviz
+library(mclust) # for Mclust EM clustering
+#install.packages("naivebayes")
+library(naivebayes)
+#Loading required packages
+#install.packages('tidyverse')
+library(tidyverse)
+#install.packages('ggplot2')
+library(ggplot2)
+#install.packages('caret')
+library(caret)
+#install.packages('caretEnsemble')
+library(caretEnsemble)
+#install.packages('psych')
+library(psych)
+#install.packages('Amelia')
+library(Amelia)
+#install.packages('mice')
+library(mice)
+#install.packages('GGally')
+library(GGally)
+library(e1071)
+library(MASS) 
+library(reshape2) 
+library(reshape)
+Myfile1= "/Users/yaminipriyankakandikattu/Desktop/AH_Monthly_Provisional_Counts_of_Deaths_for_Select_Causes_of_Death_by_Sex__Age__and_Race_and_Hispanic_Origin.csv"
+df <- read.csv(Myfile1,stringsAsFactors=TRUE)
+colnames(df)
+df
+melt_data <- melt(df, id = c("AnalysisDate","Date.Of.Death.Year","Date.Of.Death.Month","Start.Date",
+"End.Date","Jurisdiction.of.Occurrence","Sex","Race.Ethnicity","AgeGroup"))
+melt_data
+#melt_data[melt_data == 'F'] <- 'Female'
+#melt_data[melt_data == 'M'] <- 'Male'
+colnames(melt_data)
+colnames(melt_data)[which(names(melt_data) == "variable")] <- "Causeofdeath"
+colnames(melt_data)[which(names(melt_data) == "value")] <- "NoofDeaths"
+data <- subset (melt_data, select = -c(AnalysisDate,Date.Of.Death.Year,Date.Of.Death.Month,Start.Date,End.Date))
+data
+is.na(data)
+data = na.omit(data)
+data
+data = data[data$Causeofdeath != 'AllCause' & data$Causeofdeath != 'NaturalCause', ] 
+data = data[data$Sex != 'AllCause', ] 
+data = data[data$NoofDeaths != '0',] 
+colnames(data)
+
+(Size <- (as.integer(nrow(data)/4)))  ## Test will be 1/4 of the data
+(SAMPLE <- sample(nrow(data), Size))
+
+(DF_Test<-data[SAMPLE, ])
+(DF_Train<-data[-SAMPLE, ])
+
+str(DF_Test$Sex)
+
+str(DF_Train$Sex)
+table(DF_Test$Sex)
+
+(DF_Test_Labels <- DF_Test$Sex)
+
+DF_Test_NL<-DF_Test[ , -which(names(DF_Test) %in% c("Sex"))]
+(DF_Test_NL[1:4, 1:4])
+## Check size
+(ncol(DF_Test_NL))
+#(DF_Test_Student_NL)
+## Train...--------------------------------
+## Copy the Labels
+(DF_Train_Labels <- DF_Train$Sex)
+## Remove the labels
+DF_Train_NL<-DF_Train[ , -which(names(DF_Train) %in% c("Sex"))]
+(DF_Train_NL[1:4, 1:4])
+## Check size
+(ncol(DF_Train_NL))
+#(DF_Train_Student_NL)
+
+
+(NB_e1071<-naiveBayes(DF_Train_NL, DF_Train_Labels, laplace = 1))
+NB_e1071_Pred <- predict(NB_e1071, DF_Test_NL)
+
+#head(cbind(NB_e1071_Pred, DF_Train_NL))
+tab1 = table(NB_e1071_Pred,DF_Test_Labels)
+1 - sum(diag(tab1))/ sum(tab1)
+confusionMatrix(tab1)
+(NB_e1071_Pred)
